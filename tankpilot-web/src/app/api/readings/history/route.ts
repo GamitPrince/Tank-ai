@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   try {
     const pool = getPool();
 
-    // Get the last N readings per sensor (for trend charts)
+    // Get the latest readings for the device (default up to limit * 5 to cover 5 sensors)
     const result = await pool.query(`
       SELECT
         r.time,
@@ -21,10 +21,9 @@ export async function GET(request: Request) {
         r.quality
       FROM readings r
       WHERE r.device_id = $1
-        AND r.time > now() - interval '1 hour'
       ORDER BY r.time DESC
       LIMIT $2
-    `, [deviceId, limit * 5]); // * 5 because 5 sensors per reading
+    `, [deviceId, limit * 5]);
 
     // Pivot into time-series format
     const timeMap: Record<string, Record<string, number>> = {};

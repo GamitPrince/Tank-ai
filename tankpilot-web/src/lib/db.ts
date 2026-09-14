@@ -1,16 +1,18 @@
 import { Pool } from 'pg';
 
-// Singleton pool — reused across API calls
-let pool: Pool | null = null;
+const globalForDb = globalThis as unknown as {
+  pgPool: Pool | undefined;
+};
 
 export function getPool(): Pool {
-  if (!pool) {
-    pool = new Pool({
+  if (!globalForDb.pgPool) {
+    globalForDb.pgPool = new Pool({
       connectionString: process.env.DATABASE_URL,
       ssl: { rejectUnauthorized: false },
-      max: 5,
+      max: 10,
+      connectionTimeoutMillis: 5000,
       idleTimeoutMillis: 30000,
     });
   }
-  return pool;
+  return globalForDb.pgPool;
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 
 export interface SensorReading {
   sensor_id: string;
@@ -28,7 +28,7 @@ export interface LiveData {
   lastFetchTime: number | null;
 }
 
-const POLL_INTERVAL = parseInt(process.env.NEXT_PUBLIC_POLL_INTERVAL || '1000');
+const POLL_INTERVAL = 1500;
 
 export function useLiveReadings(): LiveData {
   const [data, setData] = useState<LiveData>({
@@ -42,8 +42,15 @@ export function useLiveReadings(): LiveData {
 
   useEffect(() => {
     let mounted = true;
-    let timeoutId: ReturnType<typeof setTimeout>;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
     let isFetching = false;
+
+    // Timeout safety fallback: never leave the screen stuck on loading > 5 seconds
+    const fallbackTimer = setTimeout(() => {
+      if (mounted) {
+        setData(prev => prev.isLoading ? { ...prev, isLoading: false, error: prev.error || 'Connection timed out. Retrying...' } : prev);
+      }
+    }, 5000);
 
     const fetchData = async () => {
       if (isFetching) return;
@@ -52,15 +59,20 @@ export function useLiveReadings(): LiveData {
       try {
         const start = Date.now();
         const res = await fetch('/api/readings', { cache: 'no-store' });
-        const json = await res.json();
         const elapsed = Date.now() - start;
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+
+        const json = await res.json();
 
         if (!mounted) return;
 
         if (json.success) {
           setData({
-            devices: json.devices,
-            timestamp: json.timestamp,
+            devices: json.devices || {},
+            timestamp: json.timestamp || new Date().toISOString(),
             isConnected: true,
             isLoading: false,
             error: null,
@@ -71,16 +83,18 @@ export function useLiveReadings(): LiveData {
             ...prev,
             isConnected: false,
             isLoading: false,
-            error: json.error || 'Unknown error',
+            error: json.error || 'Server error fetching readings',
+            lastFetchTime: elapsed,
           }));
         }
-      } catch (err) {
+      } catch (err: unknown) {
         if (!mounted) return;
+        const msg = err instanceof Error ? err.message : 'Network error';
         setData(prev => ({
           ...prev,
           isConnected: false,
           isLoading: false,
-          error: 'Network error — cannot reach API',
+          error: msg,
         }));
       } finally {
         isFetching = false;
@@ -90,12 +104,12 @@ export function useLiveReadings(): LiveData {
       }
     };
 
-    // Initial fetch
     fetchData();
 
     return () => {
       mounted = false;
-      clearTimeout(timeoutId);
+      clearTimeout(fallbackTimer);
+      if (timeoutId) clearTimeout(timeoutId);
     };
   }, []);
 

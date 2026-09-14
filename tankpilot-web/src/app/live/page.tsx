@@ -3,7 +3,8 @@
 import { useEffect, useRef } from 'react';
 import { useLiveReadings } from '@/lib/useLiveReadings';
 import { useStaggerEntrance, useFadeIn, animate } from '@/lib/animations';
-import { Activity, Radio } from 'lucide-react';
+import LiveSensorChart from '@/components/ui/LiveSensorChart';
+import { Activity, Radio, RefreshCw, AlertCircle } from 'lucide-react';
 import styles from './page.module.css';
 
 function AnimatedValue({ value, unit, decimals = 2 }: { value: number; unit: string; decimals?: number }) {
@@ -12,30 +13,41 @@ function AnimatedValue({ value, unit, decimals = 2 }: { value: number; unit: str
 
   useEffect(() => {
     if (!ref.current) return;
-    if (prevValue.current === value) {
-      ref.current.textContent = value.toFixed(decimals);
+    const num = typeof value === 'number' && !isNaN(value) ? value : 0;
+    const prev = typeof prevValue.current === 'number' && !isNaN(prevValue.current) ? prevValue.current : num;
+
+    if (prev === num) {
+      ref.current.textContent = num.toFixed(decimals);
       return;
     }
 
-    const obj = { val: prevValue.current };
-    animate(obj, {
-      val: value,
-      duration: 600,
-      ease: 'outExpo',
-      onUpdate: () => {
-        if (ref.current) {
-          ref.current.textContent = obj.val.toFixed(decimals);
-        }
-      },
-      onComplete: () => {
-        prevValue.current = value;
-      },
-    });
+    const obj = { val: prev };
+    try {
+      animate(obj, {
+        val: num,
+        duration: 600,
+        ease: 'outExpo',
+        onUpdate: () => {
+          if (ref.current) {
+            ref.current.textContent = obj.val.toFixed(decimals);
+          }
+        },
+        onComplete: () => {
+          prevValue.current = num;
+        },
+      });
+    } catch {
+      if (ref.current) {
+        ref.current.textContent = num.toFixed(decimals);
+      }
+    }
   }, [value, decimals]);
+
+  const displayVal = typeof value === 'number' && !isNaN(value) ? value.toFixed(decimals) : '--';
 
   return (
     <div className={styles.sensorValue}>
-      <span ref={ref}>{value.toFixed(decimals)}</span>
+      <span ref={ref}>{displayVal}</span>
       <span className={styles.sensorUnit}>{unit}</span>
     </div>
   );
@@ -44,10 +56,6 @@ function AnimatedValue({ value, unit, decimals = 2 }: { value: number; unit: str
 export default function LivePage() {
   const { devices, isConnected, isLoading, error, lastFetchTime, timestamp } = useLiveReadings();
   const headerRef = useFadeIn('down');
-
-  if (isLoading) {
-    return <div className={styles.loading}>Connecting to sensors...</div>;
-  }
 
   const deviceEntries = Object.values(devices);
 
@@ -58,10 +66,17 @@ export default function LivePage() {
         <h1 style={{ margin: 0 }}>Live Sensor Readings</h1>
       </div>
 
+      {/* Connection status bar */}
       <div className={styles.statusBar}>
         <div className={styles.statusLeft}>
           <div className={`${styles.statusDot} ${isConnected ? styles.connected : styles.disconnected}`} />
-          <span>{isConnected ? 'Connected — Polling every 1s' : 'Disconnected'}</span>
+          <span>
+            {isLoading
+              ? 'Connecting to sensors...'
+              : isConnected
+              ? 'Connected — Polling every 1.5s'
+              : 'Disconnected'}
+          </span>
         </div>
         <div className={styles.latency}>
           {lastFetchTime !== null && <span>Latency: {lastFetchTime}ms</span>}
@@ -71,15 +86,25 @@ export default function LivePage() {
 
       {error && (
         <div className={styles.errorBox}>
-          <strong>Error:</strong> {error}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <AlertCircle size={18} />
+            <span><strong>Notice:</strong> {error}</span>
+          </div>
         </div>
       )}
 
-      {deviceEntries.length === 0 && !error && (
+      {isLoading && (
+        <div className={styles.loading}>
+          <RefreshCw size={24} style={{ animation: 'spin 1.5s linear infinite', marginRight: '0.75rem' }} />
+          <span>Connecting to database and reading telemetry...</span>
+        </div>
+      )}
+
+      {!isLoading && deviceEntries.length === 0 && !error && (
         <div className={styles.loading}>No devices found in database. Waiting for sensor data...</div>
       )}
 
-      {deviceEntries.map(device => (
+      {!isLoading && deviceEntries.map(device => (
         <DeviceSection key={device.device_id} device={device} />
       ))}
     </div>
@@ -87,7 +112,7 @@ export default function LivePage() {
 }
 
 function DeviceSection({ device }: { device: ReturnType<typeof useLiveReadings>['devices'][string] }) {
-  const sensorEntries = Object.values(device.sensors);
+  const sensorEntries = Object.values(device.sensors || {});
   const lastUpdated = new Date(device.last_updated);
   const ageMs = Date.now() - lastUpdated.getTime();
   const isStale = ageMs > 10000;
@@ -133,6 +158,13 @@ function DeviceSection({ device }: { device: ReturnType<typeof useLiveReadings>[
           );
         })}
       </div>
+
+      {/* Real-time Telemetry Trend Graph */}
+      <LiveSensorChart
+        deviceId={device.device_id}
+        deviceName={device.device_name}
+        liveSensors={device.sensors}
+      />
     </div>
   );
 }
