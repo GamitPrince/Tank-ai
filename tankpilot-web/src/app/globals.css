@@ -1,0 +1,68 @@
+:root {
+  --background: #0f172a; /* slate-900 */
+  --foreground: #f8fafc; /* slate-50 */
+  
+  --card-bg: #1e293b; /* slate-800 */
+  --card-border: #334155; /* slate-700 */
+  
+  --primary: #3b82f6; /* blue-500 */
+  --primary-foreground: #ffffff;
+  
+  /* Status Colors */
+  --status-normal: #22c55e; /* Green - normal */
+  --status-normal-bg: rgba(34, 197, 94, 0.1);
+  
+  --status-warning: #f59e0b; /* Amber - advisory/warning */
+  --status-warning-bg: rgba(245, 158, 11, 0.1);
+  
+  --status-critical: #ef4444; /* Red - critical trip */
+  --status-critical-bg: rgba(239, 68, 68, 0.1);
+  
+  --status-ai: #3b82f6; /* Blue - AI recommendation */
+  --status-ai-bg: rgba(59, 130, 246, 0.1);
+  
+  --status-offline: #64748b; /* Grey - offline/manual */
+  --status-offline-bg: rgba(100, 116, 139, 0.1);
+  
+  --text-muted: #94a3b8; /* slate-400 */
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+ul {
+  list-style: none;
+}
+
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 1rem;
+}
