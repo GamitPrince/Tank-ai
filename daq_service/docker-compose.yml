@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  daq_timescaledb:
+    image: timescale/timescaledb:latest-pg15
+    container_name: daq_timescaledb
+    restart: always
+    environment:
+      POSTGRES_DB: daq
+      POSTGRES_USER: daq_user
+      POSTGRES_PASSWORD: changeme
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+
+  daq_collector:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: daq_collector
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://daq_user:changeme@daq_timescaledb:5432/daq
+      NUCLEO_IP: 192.168.10.100
+      NUCLEO_PORT: 502
+      POLL_INTERVAL: 1.0
+      DEVICE_ID: rtu_level_control_01
+    depends_on:
+      - daq_timescaledb
+
+volumes:
+  timescale_data:

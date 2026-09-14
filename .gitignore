@@ -1,0 +1,22 @@
+# STM32CubeIDE / Eclipse
+Debug/
+Release/
+.settings/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.env
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Any other build outputs
+*.elf
+*.hex
+*.bin
+*.map
