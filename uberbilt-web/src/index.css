@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-canvas: #f2f3f7;
+  --color-surface: #ffffff;
+  --color-well: #eef1f6;
+  --color-line: rgba(51, 46, 45, 0.08);
+  --color-shadow: #d6dce6;
+  --color-ink: #332e2d;
+  --color-muted: #7c7577;
+  --color-logo-rest: #1a1a1a;
+  --color-handle: #ffffff;
+  --dial-plate: #f7f8fb;
+  --dial-face: #ffffff;
+  --dial-track: #e4e8f0;
+  --shadow-soft: 0 10px 24px rgba(166, 178, 198, 0.32), 0 2px 6px rgba(166, 178, 198, 0.16);
+  --shadow-soft-lg: 0 14px 32px rgba(166, 178, 198, 0.38), 0 4px 10px rgba(166, 178, 198, 0.16);
+  --shadow-inset: inset 3px 5px 14px rgba(166, 178, 198, 0.55), inset -2px -3px 8px rgba(255, 255, 255, 0.95);
+  color-scheme: light;
+}
+
+html.dark {
+  --color-canvas: #1c1c1c;
+  --color-surface: #252525;
+  --color-well: #161616;
+  --color-line: rgba(255, 255, 255, 0.06);
+  --color-shadow: #0d0d0d;
+  --color-ink: #f4f4f4;
+  --color-muted: #9a9395;
+  --color-logo-rest: #ffffff;
+  --color-handle: #e4e4e4;
+  --dial-plate: #1f1f1f;
+  --dial-face: #252525;
+  --dial-track: #2f2f2f;
+  --shadow-soft: 0 12px 28px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --shadow-soft-lg: 0 16px 36px rgba(0, 0, 0, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-inset: inset 3px 6px 14px rgba(0, 0, 0, 0.65), inset -1px -2px 6px rgba(255, 255, 255, 0.03);
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: Manrope, system-ui, sans-serif;
+  font-weight: 500;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100dvh;
+}
+
+button,
+input,
+select {
+  font-family: inherit;
+}
+
+input,
+select {
+  outline: none;
+}
+
+select {
+  appearance: none;
+}
