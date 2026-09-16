@@ -1,9 +1,10 @@
-import { Activity, Bell, Factory, LayoutGrid, Settings, Zap, type LucideIcon } from 'lucide-react';
+import { Activity, Bell, Factory, LayoutGrid, Settings, Zap, Users, type LucideIcon } from 'lucide-react';
 
 export interface NavItem {
   to: string;
   label: string;
   icon: LucideIcon;
+  adminOnly?: boolean;
 }
 
 export const appNavItems: NavItem[] = [
@@ -13,6 +14,7 @@ export const appNavItems: NavItem[] = [
   { to: '/energy', label: 'Energy', icon: Zap },
   { to: '/notifications', label: 'Alerts', icon: Bell },
   { to: '/settings', label: 'Settings', icon: Settings },
+  { to: '/admin/users', label: 'Users', icon: Users, adminOnly: true },
 ];
 
 export function isNavActive(pathname: string, to: string) {

@@ -1,9 +1,44 @@
 import type { Industry, Plant, PilotTank as Tank, User } from './pilotTypes';
 
-export const mockUsers: User[] = [
-  { id: 'u1', name: 'Operator John', role: 'operator', industryAccess: ['ind1'] },
-  { id: 'u2', name: 'Admin Sarah', role: 'admin', industryAccess: ['ind1', 'ind2'] },
+// Fixed, immutable administrator emails that cannot be altered or removed
+export const FIXED_ADMIN_EMAILS = [
+  'princ3gamit20561@gmail.com',
+  'ar.kin.2642003@gmail.com',
+] as const;
+
+export function isFixedAdmin(email?: string | null): boolean {
+  if (!email) return false;
+  return FIXED_ADMIN_EMAILS.some((adminEmail) => adminEmail.toLowerCase() === email.trim().toLowerCase());
+}
+
+export const FIXED_ADMIN_USERS: User[] = [
+  {
+    id: 'admin-prince',
+    name: 'Prince Gamit',
+    email: 'princ3gamit20561@gmail.com',
+    role: 'admin',
+    industryAccess: ['ind1', 'ind2'],
+    authProvider: 'google',
+    isFixedAdmin: true,
+  },
+  {
+    id: 'admin-arkin',
+    name: 'AR Kin',
+    email: 'ar.kin.2642003@gmail.com',
+    role: 'admin',
+    industryAccess: ['ind1', 'ind2'],
+    authProvider: 'google',
+    isFixedAdmin: true,
+  },
 ];
+
+export const mockUsers: User[] = [
+  ...FIXED_ADMIN_USERS,
+  { id: 'u1', name: 'Operator John', role: 'operator', industryAccess: ['ind1'], authProvider: 'password' },
+  { id: 'u2', name: 'Admin Sarah', role: 'admin', industryAccess: ['ind1', 'ind2'], authProvider: 'password' },
+];
+
+
 
 export const mockIndustries: Industry[] = [
   {
