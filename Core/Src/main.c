@@ -27,7 +27,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <Stdio.h>
-#include "http_post_client.h"
+#include "uart_telemetry.h"
 #include "modbus_tcp_server.h"
 /* USER CODE END Includes */
 
@@ -117,7 +117,7 @@ int main(void)
   MX_USB_OTG_FS_PCD_Init();
   MX_ADC1_Init();
   MX_LWIP_Init();
-
+  MX_UART4_Init();
   /* USER CODE BEGIN 2 */
 
   printf("\r\n");
@@ -126,6 +126,7 @@ int main(void)
   printf("STM32F767ZI Ready\r\n");
   printf("=================================\r\n\r\n");
   ModbusTCP_Server_Init();
+  UART_Telemetry_Init();
 
   /* USER CODE END 2 */
 
@@ -133,51 +134,30 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-      MX_LWIP_Process();
+    /* USER CODE END WHILE */
 
-      static uint32_t last_update = 0;
+    /* USER CODE BEGIN 3 */
 
-      if ((HAL_GetTick() - last_update) >= 500)
-      {
-          last_update = HAL_GetTick();
+	/* ---- Read sensors ---- */
+	adcValue = Read_ADC();
+	voltage  = ADC_To_Voltage(adcValue);
+	current  = Voltage_To_Current(voltage);
+	level    = Current_To_Level(current);
+	Control_Relay(level);
 
-          /* Existing ADC / control code */
-          adcValue = Read_ADC();
+	/* ---- Process Ethernet / Modbus TCP ---- */
+	MX_LWIP_Process();
 
-          voltage = ((float)adcValue / 4095.0f) * 3.3f;
+	/* ---- Send telemetry to ESP32 via UART4 (throttled) ---- */
+	UART_Telemetry_SendIfDue(
+		(uint16_t)adcValue,
+		voltage,
+		current,
+		level,
+		(uint8_t)HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_0)
+	);
 
-          current = 4.0f + ((voltage / 3.3f) * 16.0f);
-
-          level = (voltage / 3.3f) * 100.0f;
-
-          /* Existing relay/control logic */
-          if (level >= 80.0f)
-          {
-              HAL_GPIO_WritePin(GPIOE, GPIO_PIN_0, GPIO_PIN_RESET);
-          }
-          else if (level <= 20.0f)
-          {
-              HAL_GPIO_WritePin(GPIOE, GPIO_PIN_0, GPIO_PIN_SET);
-          }
-
-          printf("ADC      : %lu\r\n", adcValue);
-          printf("Voltage  : %.2f V\r\n", voltage);
-          printf("Current  : %.2f mA\r\n", current);
-          printf("Level    : %.2f %%\r\n", level);
-          printf("Relay    : %s\r\n",
-                 HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_0) == GPIO_PIN_SET
-                 ? "ON" : "OFF");
-
-          /* Existing HTTP call */
-          HttpPost_SendReadings(
-        		    (uint16_t)adcValue,
-        		    voltage,
-        		    current,
-        		    level,
-        		    (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_0) == GPIO_PIN_SET) ? 1 : 0
-        		);
-
-      }
+	HAL_Delay(100); /* ~10 Hz main loop rate */
   }
   /* USER CODE END 3 */
 }
