@@ -27,7 +27,9 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <Stdio.h>
-#include "uart_telemetry.h"
+#include "esp32_interface.h"
+#include "connectivity_manager.h"
+#include "data_manager.h"
 #include "modbus_tcp_server.h"
 /* USER CODE END Includes */
 
@@ -126,7 +128,9 @@ int main(void)
   printf("STM32F767ZI Ready\r\n");
   printf("=================================\r\n\r\n");
   ModbusTCP_Server_Init();
-  UART_Telemetry_Init();
+  ESP32_Interface_Init();
+  ConnectivityManager_Init();
+  DataManager_Init();
 
   /* USER CODE END 2 */
 
@@ -137,6 +141,10 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    
+    ESP32_Interface_Process();
+    ConnectivityManager_Process();
+    DataManager_Process();
 
 	/* ---- Read sensors ---- */
 	adcValue = Read_ADC();
@@ -148,8 +156,8 @@ int main(void)
 	/* ---- Process Ethernet / Modbus TCP ---- */
 	MX_LWIP_Process();
 
-	/* ---- Send telemetry to ESP32 via UART4 (throttled) ---- */
-	UART_Telemetry_SendIfDue(
+	/* ---- Record Data & Send via Active Transport ---- */
+	DataManager_RecordReadings(
 		(uint16_t)adcValue,
 		voltage,
 		current,
