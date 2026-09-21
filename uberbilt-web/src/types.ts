@@ -51,6 +51,13 @@ export interface TankExtras {
   sensorHealth: { sensorId: string; name: string; score: number }[];
   predictiveAlerts: string[];
   advisories: string[];
+  equipment: {
+    inletValve: boolean;
+    outletValve: boolean;
+    inletPump: boolean;
+    outletPump: boolean;
+    circulationPumpStatus: boolean;
+  };
 }
 
 export interface Branch {

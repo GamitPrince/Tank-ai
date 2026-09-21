@@ -69,6 +69,13 @@ export function toExtras(tank: PilotTank): TankExtras {
     sensorHealth: tank.maintenance.sensorHealthScores,
     predictiveAlerts: tank.maintenance.predictiveAlerts,
     advisories: tank.advisories.map((a) => a.message),
+    equipment: {
+      inletValve: tank.equipment.inletValve,
+      outletValve: tank.equipment.outletValve,
+      inletPump: tank.equipment.inletPump,
+      outletPump: tank.equipment.outletPump,
+      circulationPumpStatus: tank.equipment.circulationPumpStatus,
+    },
   };
 }
 

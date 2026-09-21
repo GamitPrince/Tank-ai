@@ -37,6 +37,8 @@ export function Industries() {
             0,
           );
 
+          const industryVolume = industryTanks.reduce((sum, tank) => sum + (tank.level.volume_m3 || 0), 0);
+
           return (
             <section key={industry.id} className="rounded-2xl bg-surface px-5 py-5 shadow-soft lg:px-6 lg:py-6">
               <div className="mb-4 flex items-start justify-between gap-3">
@@ -48,7 +50,7 @@ export function Industries() {
                     <h2 className="text-[17px] font-extrabold text-ink">{industry.name}</h2>
                     <p className="mt-1 text-[13px] text-muted">
                       {industryPlants.length} plant{industryPlants.length === 1 ? '' : 's'} · {industryTanks.length}{' '}
-                      tank{industryTanks.length === 1 ? '' : 's'}
+                      tank{industryTanks.length === 1 ? '' : 's'} · {industryVolume.toLocaleString(undefined, { maximumFractionDigits: 0 })} m³
                     </p>
                   </div>
                 </div>
@@ -83,6 +85,7 @@ export function Industries() {
                           plantTanks.reduce((sum, tank) => sum + tank.energy.efficiencyScore, 0) / plantTanks.length,
                         )
                       : 0;
+                  const plantVolume = plantTanks.reduce((sum, tank) => sum + (tank.level.volume_m3 || 0), 0);
 
                   return (
                     <button
@@ -106,8 +109,9 @@ export function Industries() {
                           )}
                         />
                       </div>
-                      <div className="mt-4 grid grid-cols-3 gap-2">
+                      <div className="mt-4 grid grid-cols-4 gap-2">
                         <MiniStat label="Tanks" value={String(plantTanks.length)} />
+                        <MiniStat label="Volume" value={`${plantVolume.toLocaleString(undefined, { maximumFractionDigits: 0 })} m³`} />
                         <MiniStat label="Alarms" value={String(plantAlarms)} danger={plantAlarms > 0} />
                         <MiniStat label="Efficiency" value={`${efficiency}%`} />
                       </div>

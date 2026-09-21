@@ -4,6 +4,7 @@ import { cx } from '../lib/cx';
 import { appNavItems, isNavActive } from '../lib/nav';
 import { useApp } from '../store';
 import { Logo } from './Logo';
+import { GoogleIcon } from './GoogleIcon';
 
 interface DesktopSidebarProps {
   onClose?: () => void;
@@ -24,6 +25,8 @@ export function DesktopSidebar({ onClose }: DesktopSidebarProps) {
 
       <nav className="mt-8 flex flex-col gap-1">
         {appNavItems.map((link) => {
+          if (link.adminOnly && currentUser?.role !== 'admin') return null;
+          
           const Icon = link.icon;
           const active = isNavActive(location.pathname, link.to);
           const to = link.to === '/dashboard' && !plantSelected ? '/industries' : link.to;
@@ -96,11 +99,26 @@ export function DesktopSidebar({ onClose }: DesktopSidebarProps) {
       {!plantSelected && <div className="min-h-0 flex-1" />}
 
       <div className="mt-4 rounded-2xl bg-canvas px-3 py-3">
-        <p className="truncate text-[13px] font-semibold text-ink">{userName || currentUser?.name || 'Operator'}</p>
+        <div className="flex items-center justify-between gap-1.5">
+          <p className="truncate text-[13px] font-semibold text-ink">{userName || currentUser?.name || 'Operator'}</p>
+          {currentUser?.role === 'admin' && (
+            <span
+              className="inline-flex shrink-0 items-center gap-1 rounded-full bg-brand/15 px-2 py-0.5 text-[10px] font-bold text-brand"
+              title={currentUser?.isFixedAdmin ? 'Permanent Fixed Administrator' : 'Administrator'}
+            >
+              {currentUser?.authProvider === 'google' && <GoogleIcon className="h-2.5 w-2.5" />}
+              {currentUser?.isFixedAdmin ? 'Fixed Admin' : 'Admin'}
+            </span>
+          )}
+        </div>
+        {currentUser?.email && (
+          <p className="truncate text-[11px] font-mono text-muted/80">{currentUser.email}</p>
+        )}
         <p className="truncate text-[12px] capitalize text-muted">
           {currentUser?.role ?? 'operator'}
           {branch?.name && plantSelected ? ` · ${branch.name}` : ''}
         </p>
+
         <button
           type="button"
           onClick={() => {

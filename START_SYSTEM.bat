@@ -15,11 +15,11 @@ echo.
 
 REM 1. Start DAQ Collector (Modbus TCP -> TimescaleDB Cloud)
 echo [1/2] Starting DAQ Collector in a new window...
-start "RTU DAQ Collector" cmd /k "cd /d \"%~dp0daq_service\" && run_cloud_collector.bat"
+start "RTU DAQ Collector" /D "%~dp0daq_service" cmd /k "run_cloud_collector.bat"
 
 REM 2. Start UBERBILT Vite Web App (TankPilot functions + UBERBILT UI)
 echo [2/2] Starting UBERBILT Web App in a new window...
-start "UBERBILT Web" cmd /k "cd /d \"%~dp0uberbilt-web\" && run_web.bat"
+start "UBERBILT Web" /D "%~dp0uberbilt-web" cmd /k "run_web.bat"
 
 echo.
 echo Waiting 5 seconds for services to initialize...

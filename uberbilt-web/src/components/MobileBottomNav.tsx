@@ -4,9 +4,14 @@ import { cx } from '../lib/cx';
 import { useApp } from '../store';
 
 export function MobileBottomNav() {
-  const { plantSelected } = useApp();
+  const { plantSelected, currentUser } = useApp();
   const { pathname } = useLocation();
-  const items = appNavItems.filter((item) => item.to !== '/industries' && item.to !== '/notifications');
+  const items = appNavItems.filter(
+    (item) =>
+      item.to !== '/industries' &&
+      item.to !== '/notifications' &&
+      (!item.adminOnly || currentUser?.role === 'admin'),
+  );
 
   return (
     <nav

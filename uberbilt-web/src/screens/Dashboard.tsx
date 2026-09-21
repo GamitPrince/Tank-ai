@@ -4,7 +4,7 @@ import { TankCard } from '../components/TankCard';
 import { useApp } from '../store';
 
 export function Dashboard() {
-  const { tanks, branches, branchId, plantSelected, isSimulating } = useApp();
+  const { tanks, extras, branches, branchId, plantSelected, isSimulating } = useApp();
   const navigate = useNavigate();
   const plant = branches.find((branch) => branch.id === branchId);
 
@@ -14,6 +14,7 @@ export function Dashboard() {
   const online = tanks.filter((tank) => tank.connectivity === 'online').length;
   const alerts = tanks.filter((tank) => tank.alertLevel !== 'none').length;
   const offline = tanks.filter((tank) => tank.connectivity === 'offline' || tank.connectivity === 'connecting').length;
+  const totalVolume = tanks.reduce((sum, tank) => sum + (extras[tank.id]?.volumeM3 || 0), 0);
 
   return (
     <>
@@ -28,7 +29,8 @@ export function Dashboard() {
           <p className="mt-0.5 text-[12px] font-semibold text-brand lg:hidden">Change plant</p>
         </button>
       )}
-      <div className="mb-5 hidden grid-cols-2 gap-3 sm:grid sm:mb-6 md:grid-cols-4">
+      <div className="mb-5 hidden grid-cols-2 gap-3 sm:grid sm:mb-6 md:grid-cols-5">
+        <SummaryChip label="Total Volume" value={`${totalVolume.toLocaleString(undefined, { maximumFractionDigits: 1 })} m³`} />
         <SummaryChip label="Tanks" value={String(tanks.length)} />
         <SummaryChip label="Online" value={String(online)} tone="success" />
         <SummaryChip label="Offline" value={String(offline)} tone="brand" />

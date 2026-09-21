@@ -90,4 +90,10 @@ export interface User {
   name: string;
   role: UserRole;
   industryAccess: string[];
+  email?: string;
+  avatar?: string;
+  authProvider?: 'password' | 'google';
+  isFixedAdmin?: boolean;
 }
+
+

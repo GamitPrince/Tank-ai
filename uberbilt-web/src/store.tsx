@@ -8,7 +8,13 @@ import {
   type ReactNode,
 } from 'react';
 import { toExtras, toNotifications, toViewTank } from './lib/mapTank';
-import { mockUsers, usePilotStore } from './lib/pilotStore';
+import {
+  FIXED_ADMIN_EMAILS,
+  FIXED_ADMIN_USERS,
+  isFixedAdmin,
+  mockUsers,
+  usePilotStore,
+} from './lib/pilotStore';
 import type { Industry, PilotTank, Plant, User } from './lib/pilotTypes';
 import type { Branch, NotificationItem, Tank, TankExtras } from './types';
 
@@ -46,12 +52,15 @@ interface AppContextValue {
   extras: Record<string, TankExtras>;
   branches: Branch[];
   currentUser: User | null;
+  users: User[];
   isSimulating: boolean;
   plantSelected: boolean;
   accessibleIndustries: Industry[];
   accessiblePlants: Plant[];
   pilotTanks: PilotTank[];
+  industries: Industry[];
   login: (userName: string, branchId?: string) => void;
+  loginWithGoogle: (profile?: { name?: string; email?: string; avatar?: string }, nextBranchId?: string) => void;
   logout: () => void;
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
@@ -63,6 +72,7 @@ interface AppContextValue {
   toggleSimulation: () => void;
   acknowledgeAlarm: (tankId: string, alarmId: string) => void;
   switchUser: (userId: string) => void;
+  updateUserAccess: (userId: string, updates: Partial<User>) => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -71,6 +81,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const pilotTanks = usePilotStore((s) => s.tanks);
   const plants = usePilotStore((s) => s.plants);
   const industries = usePilotStore((s) => s.industries);
+  const users = usePilotStore((s) => s.users);
   const currentUser = usePilotStore((s) => s.currentUser);
   const isSimulating = usePilotStore((s) => s.isSimulating);
   const [authenticated, setAuthenticated] = useState(false);
@@ -81,6 +92,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const accessiblePlants = useMemo(() => {
     if (!currentUser) return plants;
+    const isSuperAdmin = currentUser.isFixedAdmin || currentUser.role === 'admin';
+    if (isSuperAdmin) return plants;
+
     const plantIds = new Set(
       currentUser.industryAccess.flatMap(
         (industryId) => industries.find((industry) => industry.id === industryId)?.plantIds ?? [],
@@ -90,7 +104,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [currentUser, industries, plants]);
 
   const accessibleIndustries = useMemo(() => {
-    const allowed = new Set(currentUser?.industryAccess ?? industries.map((industry) => industry.id));
+    const isSuperAdmin = currentUser?.isFixedAdmin || currentUser?.role === 'admin';
+    const allowed = new Set(
+      isSuperAdmin
+        ? industries.map((i) => i.id)
+        : currentUser?.industryAccess ?? industries.map((industry) => industry.id),
+    );
     return industries
       .filter((industry) => allowed.has(industry.id))
       .map((industry) => ({
@@ -148,6 +167,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setPlantSelected(false);
     }
   }, []);
+
+  const loginWithGoogle = useCallback(
+    (profile?: { name?: string; email?: string; avatar?: string }, nextBranchId?: string) => {
+      usePilotStore.getState().loginWithGoogle(profile);
+      const user = usePilotStore.getState().currentUser;
+      setUserName(user?.name || 'Google Admin');
+      setAuthenticated(true);
+      if (nextBranchId) {
+        setBranchIdState(nextBranchId);
+        setPlantSelected(true);
+      } else {
+        setBranchIdState('');
+        setPlantSelected(false);
+      }
+    },
+    [],
+  );
 
   const logout = useCallback(() => {
     setAuthenticated(false);
@@ -214,6 +250,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setPlantSelected(keepPlant);
   }, [branchId]);
 
+  const updateUserAccess = useCallback((userId: string, updates: Partial<User>) => {
+    usePilotStore.getState().updateUserAccess(userId, updates);
+  }, []);
+
   useEffect(() => {
     applyTheme(theme);
   }, [theme]);
@@ -229,12 +269,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       extras,
       branches,
       currentUser,
+      users,
+      industries,
       isSimulating,
       plantSelected,
       accessibleIndustries,
       accessiblePlants,
       pilotTanks,
       login,
+      loginWithGoogle,
       logout,
       setTheme,
       toggleTheme,
@@ -246,6 +289,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toggleSimulation,
       acknowledgeAlarm,
       switchUser,
+      updateUserAccess,
     }),
     [
       authenticated,
@@ -257,12 +301,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       extras,
       branches,
       currentUser,
+      users,
+      industries,
       isSimulating,
       plantSelected,
       accessibleIndustries,
       accessiblePlants,
       pilotTanks,
       login,
+      loginWithGoogle,
       logout,
       setTheme,
       toggleTheme,
@@ -274,6 +321,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toggleSimulation,
       acknowledgeAlarm,
       switchUser,
+      updateUserAccess,
     ],
   );
 
@@ -285,3 +333,5 @@ export function useApp() {
   if (!ctx) throw new Error('useApp must be used within AppProvider');
   return ctx;
 }
+
+export { FIXED_ADMIN_EMAILS, FIXED_ADMIN_USERS, isFixedAdmin };

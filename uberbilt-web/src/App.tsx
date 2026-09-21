@@ -14,21 +14,30 @@ import { Pressure } from './screens/Pressure';
 import { Settings } from './screens/Settings';
 import { TankDetail } from './screens/TankDetail';
 import { Temperature } from './screens/Temperature';
+import { UserManagement } from './screens/UserManagement';
+import { Consumption } from './screens/Consumption';
 import { useApp } from './store';
 
 function Protected({ children }: { children: ReactNode }) {
-  const { authenticated } = useApp();
-  if (!authenticated) return <Navigate to="/" replace />;
+  const { currentUser } = useApp();
+  if (!currentUser) return <Navigate to="/" replace />;
+  return children;
+}
+
+function AdminProtected({ children }: { children: ReactNode }) {
+  const { currentUser } = useApp();
+  if (!currentUser) return <Navigate to="/" replace />;
+  if (currentUser.role !== 'admin') return <Navigate to="/industries" replace />;
   return children;
 }
 
 export default function App() {
-  const { authenticated } = useApp();
+  const { currentUser } = useApp();
 
   return (
     <AppShell>
       <Routes>
-        <Route path="/" element={authenticated ? <Navigate to="/industries" replace /> : <Login />} />
+        <Route path="/" element={currentUser ? <Navigate to="/industries" replace /> : <Login />} />
         <Route
           path="/industries"
           element={
@@ -111,11 +120,27 @@ export default function App() {
           }
         />
         <Route
+          path="/tanks/:tankId/consumption"
+          element={
+            <Protected>
+              <Consumption />
+            </Protected>
+          }
+        />
+        <Route
           path="/settings"
           element={
             <Protected>
               <Settings />
             </Protected>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <AdminProtected>
+              <UserManagement />
+            </AdminProtected>
           }
         />
       </Routes>
