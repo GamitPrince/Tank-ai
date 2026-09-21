@@ -13,6 +13,6 @@ if not exist "venv\Scripts\python.exe" (
     exit /b 1
 )
 
-echo Starting DAQ collector...
-venv\Scripts\python.exe collector.py
+echo Starting Serial USB Ingest Server (COM6)...
+venv\Scripts\python.exe serial_ingest.py
 pause
